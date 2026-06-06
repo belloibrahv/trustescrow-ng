@@ -32,4 +32,4 @@ DISPUTE_AUTO_ESCALATE_HOURS=48
 MAX_NIN_ATTEMPTS=3
 DEAL_VALUE_CAP_KOBO=0
 APP_URL=https://trustescrow-production.up.railway.app
-ADMIN_CORS_ORIGIN=https://placeholder-will-update-after-vercel-deployment.vercel.app
+ADMIN_CORS_ORIGIN=https://trustescrow-admin.vercel.app
