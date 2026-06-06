@@ -1,39 +1,34 @@
-# apps/api/Dockerfile
-# Multi-stage production build
-# Stage 1: Builder
-FROM node:20-alpine AS builder
+# Simple Railway Dockerfile for TrustEscrow API
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Install deps first (layer caching)
+# Copy all necessary files for workspace build
 COPY package*.json ./
-COPY apps/api/package*.json ./apps/api/
-COPY packages/ ./packages/
-RUN npm ci --workspace=apps/api --ignore-scripts
-
-# Copy source and build
 COPY apps/api/ ./apps/api/
-RUN cd apps/api && npx prisma generate
-RUN npm run build --workspace=apps/api
+COPY packages/ ./packages/
 
-# ─────────────────────────────────────────────────────────────
-# Stage 2: Runner — minimal production image
-FROM node:20-alpine AS runner
+# Install all dependencies (including workspaces)
+RUN npm ci --ignore-scripts
 
-WORKDIR /app
+# Generate Prisma client and build
+WORKDIR /app/apps/api
+RUN npx prisma generate
+RUN npm run build
 
-# Security: run as non-root
+# Install only production dependencies
+RUN npm ci --only=production --ignore-scripts
+
+# Create non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
-# Copy only what's needed
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/node_modules ./node_modules
-COPY --from=builder /app/apps/api/prisma ./prisma
-COPY --from=builder /app/apps/api/package.json ./package.json
-
-# Apply migrations and start — Railway auto-runs this CMD
+RUN chown -R appuser:appgroup /app
 USER appuser
+
 EXPOSE 3000
 
-# Run migrations before starting server
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Start application (migrations + server)
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
