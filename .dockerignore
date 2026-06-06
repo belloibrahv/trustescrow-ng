@@ -1,0 +1,20 @@
+# Ignore everything except what we need
+node_modules
+npm-debug.log
+.DS_Store
+.env
+.env.*
+!.env.example
+dist
+.git
+.github
+coverage
+*.md
+!README.md
+.vscode
+.idea
+
+# Keep these for build
+!apps/api
+!packages
+!package*.json

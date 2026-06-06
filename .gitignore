@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment — NEVER commit these
+.env
+.env.*
+!.env.example
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Prisma
+apps/api/prisma/migrations/*.sql.bak
+
+# Test / coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+
+# Docker
+docker-compose.override.yml
+
+# Secrets (extra safety)
+*.pem
+*.key
+*.cert
+secrets/

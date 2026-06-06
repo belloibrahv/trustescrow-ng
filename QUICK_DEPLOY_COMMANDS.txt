@@ -1,0 +1,197 @@
+╔════════════════════════════════════════════════════════════════╗
+║           TrustEscrow NG - Quick Deploy Commands              ║
+║                Copy & Paste These Commands                     ║
+╚════════════════════════════════════════════════════════════════╝
+
+📋 CHECKLIST - Check off as you complete:
+[ ] Step 1: Railway Login
+[ ] Step 2: Railway Init
+[ ] Step 3: Add PostgreSQL
+[ ] Step 4: Create Upstash Redis
+[ ] Step 5: Set Environment Variables
+[ ] Step 6: Deploy API
+[ ] Step 7: Update APP_URL
+[ ] Step 8: Test API
+[ ] Step 9: Deploy Admin
+[ ] Step 10: Configure Admin Env
+[ ] Step 11: Update CORS
+[ ] Step 12: Test Everything
+
+═══════════════════════════════════════════════════════════════
+
+🔹 STEP 1: Login to Railway
+───────────────────────────────────────────────────────────────
+railway login
+
+(Browser opens → Sign up/Login → Authenticate)
+
+═══════════════════════════════════════════════════════════════
+
+🔹 STEP 2: Initialize Project
+───────────────────────────────────────────────────────────────
+cd /Users/kudiratbello/trustescrow-ng
+railway init
+
+(Enter project name when prompted)
+
+═══════════════════════════════════════════════════════════════
+
+🔹 STEP 3: Add PostgreSQL
+───────────────────────────────────────────────────────────────
+railway add --database postgres
+
+═══════════════════════════════════════════════════════════════
+
+🔹 STEP 4: Create Upstash Redis
+───────────────────────────────────────────────────────────────
+Open: https://console.upstash.com
+Create database → Copy TLS URL → Then:
+
+railway variables set REDIS_URL="rediss://default:xxxxx@xxxxx.upstash.io:6379"
+
+═══════════════════════════════════════════════════════════════
+
+🔹 STEP 5: Set Environment Variables
+───────────────────────────────────────────────────────────────
+railway open
+
+In Dashboard:
+1. Click service
+2. Variables tab
+3. Raw Editor
+4. Copy ALL from: railway-env-template.txt
+5. Paste & Save
+
+═══════════════════════════════════════════════════════════════
+
+🔹 STEP 6: Deploy API
+───────────────────────────────────────────────────────────────
+railway up
+
+(Takes 5-10 minutes - watch with: railway logs --tail)
+
+═══════════════════════════════════════════════════════════════
+
+🔹 STEP 7: Get Railway URL & Update
+───────────────────────────────────────────────────────────────
+railway status
+
+(Copy your URL, then update:)
+
+railway variables set APP_URL="https://YOUR-RAILWAY-URL.up.railway.app"
+
+═══════════════════════════════════════════════════════════════
+
+🔹 STEP 8: Test API
+───────────────────────────────────────────────────────────────
+curl https://YOUR-RAILWAY-URL.up.railway.app/health
+
+Expected: {"status":"ok","db":"connected"}
+
+═══════════════════════════════════════════════════════════════
+
+🔹 STEP 9: Deploy Admin Dashboard
+───────────────────────────────────────────────────────────────
+cd /Users/kudiratbello/trustescrow-ng/apps/admin
+vercel --prod
+
+(Follow prompts - project name: trustescrow-admin)
+
+═══════════════════════════════════════════════════════════════
+
+🔹 STEP 10: Configure Admin Environment
+───────────────────────────────────────────────────────────────
+vercel env add NEXT_PUBLIC_API_URL production
+
+(Enter: https://YOUR-RAILWAY-URL.up.railway.app)
+
+vercel --prod
+
+(Redeploy with environment variable)
+
+═══════════════════════════════════════════════════════════════
+
+🔹 STEP 11: Update CORS
+───────────────────────────────────────────────────────────────
+railway variables set ADMIN_CORS_ORIGIN="https://YOUR-VERCEL-URL.vercel.app"
+railway up
+
+═══════════════════════════════════════════════════════════════
+
+🔹 STEP 12: Test Everything
+───────────────────────────────────────────────────────────────
+# Test API
+curl https://YOUR-RAILWAY-URL.up.railway.app/health
+
+# Test Admin (in browser)
+https://YOUR-VERCEL-URL.vercel.app
+
+Login:
+Username: admin
+Password: wGc9DH2xPkqobvj3jYQw
+
+═══════════════════════════════════════════════════════════════
+
+📊 MONITORING COMMANDS
+───────────────────────────────────────────────────────────────
+# Railway logs
+railway logs --tail
+
+# Vercel logs  
+vercel logs --follow
+
+# Open dashboards
+railway open
+vercel
+
+═══════════════════════════════════════════════════════════════
+
+🔄 REDEPLOYMENT COMMANDS
+───────────────────────────────────────────────────────────────
+# Redeploy API
+railway up
+
+# Redeploy Admin
+cd apps/admin && vercel --prod
+
+═══════════════════════════════════════════════════════════════
+
+🐛 TROUBLESHOOTING
+───────────────────────────────────────────────────────────────
+# Build failed
+railway logs
+railway up --force
+
+# Admin can't connect
+railway variables get ADMIN_CORS_ORIGIN
+railway variables set ADMIN_CORS_ORIGIN="https://your-vercel-url"
+
+# Database migration failed
+railway run npx prisma migrate deploy
+
+═══════════════════════════════════════════════════════════════
+
+💾 YOUR CREDENTIALS (Save securely!)
+───────────────────────────────────────────────────────────────
+Admin Username: admin
+Admin Password: wGc9DH2xPkqobvj3jYQw
+
+Operator Username: operator
+Operator Password: 82m5lmbz6sVEE87FHeZA
+
+═══════════════════════════════════════════════════════════════
+
+✅ DEPLOYMENT COMPLETE WHEN:
+───────────────────────────────────────────────────────────────
+[ ] API health check returns 200
+[ ] Admin dashboard loads
+[ ] Can login to admin
+[ ] Can navigate all pages
+[ ] No CORS errors in console
+[ ] Railway logs show no errors
+[ ] Vercel logs show no errors
+
+═══════════════════════════════════════════════════════════════
+
+🎉 CONGRATULATIONS! YOUR PLATFORM IS LIVE!
+═══════════════════════════════════════════════════════════════

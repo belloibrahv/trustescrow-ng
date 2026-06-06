@@ -1,0 +1,59 @@
+# docker-compose.yml — Local dev stack
+# Run: docker-compose up -d
+# This starts PostgreSQL and Redis with persistent volumes.
+# Stop: docker-compose down
+# Wipe data: docker-compose down -v
+
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: trustescrow-postgres
+    restart: unless-stopped
+    ports:
+      - '54320:5432'
+    environment:
+      POSTGRES_DB: trustescrow_dev
+      POSTGRES_USER: trustescrow
+      POSTGRES_PASSWORD: devpass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U trustescrow -d trustescrow_dev']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: trustescrow-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Optional: BullMQ dashboard (comment out if not needed)
+  bull-board:
+    image: deadly0/bull-board:latest
+    container_name: trustescrow-bull-board
+    restart: unless-stopped
+    ports:
+      - '3002:3000'
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - redis
+
+volumes:
+  postgres_data:
+  redis_data:

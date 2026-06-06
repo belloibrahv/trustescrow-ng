@@ -1,0 +1,103 @@
+# .github/workflows/ci.yml
+# Runs on every pull request and pushes to develop.
+# All checks must pass before merging to main.
+name: CI — Lint · Type-check · Test
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [develop]
+
+jobs:
+  quality:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: trustescrow_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type-check
+        run: npm run typecheck
+        working-directory: apps/api
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: apps/api
+
+      - name: Run DB migrations
+        run: npx prisma migrate deploy
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/trustescrow_test
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/trustescrow_test
+          REDIS_URL: redis://localhost:6379
+          # Sandbox credentials — safe for CI
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AT_API_KEY: ${{ secrets.AT_API_KEY_SANDBOX }}
+          AT_USERNAME: sandbox
+          AT_SHORTCODE: '15629'
+          PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_TEST_KEY }}
+          PAYSTACK_PUBLIC_KEY: ${{ secrets.PAYSTACK_TEST_PUBLIC_KEY }}
+          PAYSTACK_WEBHOOK_SECRET: ${{ secrets.PAYSTACK_TEST_KEY }}
+          PREMBLY_API_KEY: ${{ secrets.PREMBLY_SANDBOX_KEY }}
+          PREMBLY_APP_ID: ${{ secrets.PREMBLY_SANDBOX_APP_ID }}
+          PREMBLY_BASE_URL: https://sandbox.prembly.com
+          USE_MOCK_NIN: 'true'
+          USE_MOCK_PAYSTACK: 'false'
+          ADMIN_JWT_SECRET: ci-test-secret-that-is-long-enough-32chars
+          ENCRYPTION_KEY: ${{ secrets.CI_ENCRYPTION_KEY }}
+          NIN_SALT: ci-test-nin-salt
+          APP_URL: http://localhost:3001
+          PORT: '3001'
+          DVA_EXPIRY_DAYS: '7'
+          DISPUTE_AUTO_ESCALATE_HOURS: '48'
+          MAX_NIN_ATTEMPTS: '3'
+          LIVENESS_THRESHOLD_KOBO: '50000000'
+          DEAL_VALUE_CAP_KOBO: '0'
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: apps/api/coverage/coverage-final.json

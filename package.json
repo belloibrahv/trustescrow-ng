@@ -1,0 +1,26 @@
+{
+  "name": "trustescrow-ng",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/api",
+    "dev:admin": "npm run dev --workspace=apps/admin",
+    "dev:all": "npm run dev --workspace=apps/api & npm run dev --workspace=apps/admin",
+    "build": "npm run build --workspace=apps/api && npm run build --workspace=apps/admin",
+    "test": "npm run test --workspace=apps/api",
+    "lint": "npm run lint --workspace=apps/api && npm run lint --workspace=apps/admin",
+    "typecheck": "npm run typecheck --workspace=apps/api && npm run typecheck --workspace=apps/admin",
+    "db:migrate": "npm run db:migrate --workspace=apps/api",
+    "db:studio": "npm run db:studio --workspace=apps/api"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "lightningcss": "^1.32.0"
+  }
+}

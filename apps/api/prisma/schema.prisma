@@ -1,0 +1,198 @@
+// apps/api/prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum DealStatus {
+  INITIATED
+  BUYER_VERIFIED
+  BOTH_VERIFIED
+  TERMS_AGREED
+  PAYMENT_PENDING
+  FUNDS_HELD
+  AWAITING_CONFIRMATION
+  COMPLETED
+  REFUNDED
+  DISPUTE_OPEN
+  MEDIATION
+  ESCALATED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  ESCALATED
+}
+
+// ─────────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────────
+
+model User {
+  id                    String    @id @default(uuid())
+  phone                 String    @unique
+  // Identity — NIN is NEVER stored raw. Only the HMAC hash.
+  ninHash               String?
+  nimcRef               String?   // NIMC transaction reference (NOT the NIN)
+  fullName              String?
+  dateOfBirth           String?
+  gender                String?
+  // BVN verification
+  bvnVerified           Boolean   @default(false)
+  bvnRef                String?   // Prembly transaction ref
+  // Bank account — stored AES-256 encrypted
+  bankCode              String?
+  bankAccountNumberEnc  String?   // Encrypted with app-layer AES-256
+  // Paystack
+  paystackCustomerId    String?
+  paystackRecipientCode String?
+  // Liveness (Tier 3 — high-value deals)
+  faceMatchScore        Float?
+  // NDPR consent — required before any identity check
+  consentGiven          Boolean   @default(false)
+  consentTimestamp      DateTime?
+  consentIp             String?
+  // Stats
+  dealCount             Int       @default(0)
+  // Timestamps
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  buyerDeals     Deal[]    @relation("BuyerDeals")
+  sellerDeals    Deal[]    @relation("SellerDeals")
+  messages       Message[]
+  openedDisputes Dispute[] @relation("DisputeOpener")
+
+  @@index([phone])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// DEALS
+// ─────────────────────────────────────────────
+
+model Deal {
+  id                 String     @id @default(uuid())
+  dealRef            String     @unique @default(cuid()) // Human-readable: DEAL-2025-xxxxx
+  status             DealStatus @default(INITIATED)
+  // Parties
+  buyerId            String
+  sellerId           String
+  buyer              User       @relation("BuyerDeals", fields: [buyerId], references: [id])
+  seller             User       @relation("SellerDeals", fields: [sellerId], references: [id])
+  // Deal terms — amounts stored in KOBO (1 NGN = 100 kobo) to avoid float issues
+  amountKobo         BigInt                           // Agreed deal amount
+  feeKobo            BigInt     @default(0)           // Platform fee
+  itemDescription    String
+  termsJson          Json?                            // Full structured terms object
+  // Paystack DVA
+  paystackDvaId      String?
+  paystackChargeRef  String?
+  paystackTransferId String?
+  dvaAccountNumber   String?
+  dvaBank            String?
+  dvaExpiresAt       DateTime?
+  // Timestamps
+  createdAt          DateTime   @default(now())
+  resolvedAt         DateTime?
+  updatedAt          DateTime   @updatedAt
+
+  // Relations
+  messages   Message[]
+  dispute    Dispute?
+  auditLogs  AuditLog[]
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+  @@map("deals")
+}
+
+// ─────────────────────────────────────────────
+// MESSAGES
+// ─────────────────────────────────────────────
+
+model Message {
+  id             String           @id @default(uuid())
+  dealId         String?
+  userId         String
+  direction      MessageDirection
+  body           String
+  intent         String?          // Classified intent from Claude
+  claudeResponse Json?            // Full Claude response object (for audit)
+  atMessageId    String?          @unique // Africa's Talking message ID (dedup key)
+  createdAt      DateTime         @default(now())
+
+  // Relations
+  deal Deal? @relation(fields: [dealId], references: [id])
+  user User  @relation(fields: [userId], references: [id])
+
+  @@index([dealId])
+  @@index([userId])
+  @@map("messages")
+}
+
+// ─────────────────────────────────────────────
+// DISPUTES
+// ─────────────────────────────────────────────
+
+model Dispute {
+  id           String        @id @default(uuid())
+  dealId       String        @unique
+  openedById   String
+  reason       String?
+  buyerEvidence  String?     // Evidence submitted by buyer
+  sellerEvidence String?     // Evidence submitted by seller
+  status       DisputeStatus @default(OPEN)
+  aiAssessment String?       // Claude's mediation analysis
+  resolution   String?       // Final resolution text
+  resolvedFor  String?       // 'buyer' | 'seller'
+  mediatorId   String?       // Admin user ID if escalated
+  createdAt    DateTime      @default(now())
+  resolvedAt   DateTime?
+
+  // Relations
+  deal     Deal @relation(fields: [dealId], references: [id])
+  openedBy User @relation("DisputeOpener", fields: [openedById], references: [id])
+
+  @@map("disputes")
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOG — immutable record of all actions
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  dealId    String?
+  action    String   // e.g. DEAL_CREATED, FUNDS_HELD, TRANSFER_INITIATED
+  payload   Json     // Full context snapshot
+  actorType String   // 'user' | 'system' | 'admin' | 'paystack_webhook'
+  actorId   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  deal Deal? @relation(fields: [dealId], references: [id])
+
+  @@index([dealId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

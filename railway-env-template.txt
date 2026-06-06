@@ -1,0 +1,67 @@
+# TrustEscrow NG - Railway Production Environment Variables
+# Copy these to Railway Dashboard → Variables
+# Using DEV credentials temporarily until production keys are available
+
+# ─── SERVER CONFIGURATION ───────────────────────────────────
+NODE_ENV=production
+PORT=3000
+LOG_LEVEL=info
+
+# ⚠️ IMPORTANT: Update APP_URL after first deployment with your Railway URL
+APP_URL=https://trustescrow-ng-production.up.railway.app
+
+# ⚠️ IMPORTANT: Update after deploying admin dashboard to Vercel
+ADMIN_CORS_ORIGIN=https://trustescrow-admin.vercel.app
+
+# ─── SECURITY SECRETS (GENERATED) ────────────────────────────
+ADMIN_JWT_SECRET=d3d53e86169e1b462120942f0e0d3cc367a290fe0914c8a621f951d184da0db2
+ENCRYPTION_KEY=f8864367c2f3ec43f955284ae7223fc4752033a2a3c03d6543ea01fc4edd78ca
+NIN_SALT=c7cbfe11e8470b25d2c6d414d14287e665b6f03e91d4a96cde47b32ab41c103e
+ADMIN_USERS=[{"username":"admin","password":"wGc9DH2xPkqobvj3jYQw","role":"super_admin"},{"username":"operator","password":"82m5lmbz6sVEE87FHeZA","role":"admin"}]
+
+# ─── DATABASE (AUTO-CONFIGURED BY RAILWAY) ───────────────────
+# Railway automatically sets this when you add PostgreSQL
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+
+# ─── REDIS (FROM UPSTASH) ────────────────────────────────────
+# ⚠️ REPLACE WITH YOUR UPSTASH REDIS URL
+# Get from: https://console.upstash.com
+REDIS_URL=redis://localhost:6379
+
+# ─── AFRICA'S TALKING (DEV CREDENTIALS - TEMPORARY) ──────────
+# ⚠️ REPLACE WITH LIVE CREDENTIALS BEFORE PRODUCTION USE
+AT_USERNAME=sandbox
+AT_API_KEY=atsk_a79f6c8a24a0eaa90fd9e44688a498bf4304eecf34a4673096f831eef6236d01b55346c9
+AT_SHORTCODE=96207
+AT_SENDER_ID=TRUSTESCROW
+
+# ─── PAYSTACK (TEST KEYS - TEMPORARY) ────────────────────────
+# ⚠️ REPLACE WITH LIVE KEYS BEFORE PRODUCTION USE
+PAYSTACK_SECRET_KEY=sk_test_37780b726b59580bca6a7084a5424622aa7054f7
+PAYSTACK_PUBLIC_KEY=pk_test_ec5ed34324eb8df91a9f02c494da3efb9ca01699
+PAYSTACK_WEBHOOK_SECRET=sk_test_37780b726b59580bca6a7084a5424622aa7054f7
+PAYSTACK_DVA_PROVIDER=wema-bank
+
+# ─── PREMBLY (DEV CREDENTIALS - TEMPORARY) ───────────────────
+# ⚠️ REPLACE WITH LIVE CREDENTIALS BEFORE PRODUCTION USE
+PREMBLY_API_KEY=live_sk_2c9575f35064468ab1a056903afa02bc
+PREMBLY_APP_ID=sandbox_xxxxxxxx
+PREMBLY_BASE_URL=https://sandbox.prembly.com
+
+# ─── AI PROVIDER (GROQ - FREE & FAST) ────────────────────────
+AI_PROVIDER=groq
+AI_MODEL=llama-3.3-70b-groq
+GROQ_API_KEY=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
+
+# Alternative: GitHub Models (Free)
+GITHUB_TOKEN=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
+
+# ─── FEATURE FLAGS ───────────────────────────────────────────
+# ⚠️ CHANGE TO false WHEN USING LIVE CREDENTIALS
+USE_MOCK_NIN=true
+USE_MOCK_PAYSTACK=false
+LIVENESS_THRESHOLD_KOBO=50000000
+DVA_EXPIRY_DAYS=7
+DISPUTE_AUTO_ESCALATE_HOURS=48
+MAX_NIN_ATTEMPTS=3
+DEAL_VALUE_CAP_KOBO=0

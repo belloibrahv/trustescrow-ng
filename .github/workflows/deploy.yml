@@ -1,0 +1,84 @@
+# .github/workflows/deploy.yml
+# Triggers ONLY on push to main (after PR merge).
+# Deploys API to Railway and admin dashboard to Vercel.
+name: Deploy — Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  # ─── Run CI checks first ─────────────────────────────────────────────────
+  ci-gate:
+    name: CI Gate (must pass before deploy)
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  # ─── Deploy API to Railway ───────────────────────────────────────────────
+  deploy-api:
+    name: Deploy API → Railway
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://api.trustescrow.ng
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        run: railway up --service trustescrow-api --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Wait for deployment health check
+        run: |
+          echo "Waiting 30s for deploy to stabilise..."
+          sleep 30
+          curl --fail https://api.trustescrow.ng/health || exit 1
+
+      - name: Notify Sentry of new release
+        if: success()
+        run: |
+          curl -sS https://sentry.io/api/0/organizations/${{ secrets.SENTRY_ORG }}/releases/ \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.SENTRY_AUTH_TOKEN }}" \
+            -H 'Content-Type: application/json' \
+            -d "{\"version\":\"${{ github.sha }}\",\"projects\":[\"trustescrow-api\"],\"ref\":\"${{ github.ref }}\"}"
+
+  # ─── Deploy Admin Dashboard to Vercel ───────────────────────────────────
+  deploy-admin:
+    name: Deploy Admin → Vercel
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    environment:
+      name: production-admin
+      url: https://admin.trustescrow.ng
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --workspace=apps/admin
+
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: apps/admin
