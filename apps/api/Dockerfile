@@ -6,14 +6,15 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 COPY apps/api/package*.json ./apps/api/
-COPY packages/types/package*.json ./packages/types/ || echo "No types package.json"
+
+# Copy types package if it exists
+COPY packages/ ./packages/
 
 # Install dependencies (including dev deps for build)
 RUN npm ci --ignore-scripts
 
 # Copy all source files
 COPY apps/api/ ./apps/api/
-COPY packages/types ./packages/types
 
 # Work in API directory
 WORKDIR /app/apps/api
