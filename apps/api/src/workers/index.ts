@@ -1,15 +1,36 @@
-// apps/api/src/workers/index.ts
-import { smsWorker } from './sms.worker';
-import { paymentWorker } from './payment.worker';
-import { timerWorker } from './timer.worker';
 import { logger } from '../utils/logger';
+import { redisAvailable } from '../redis/client';
 
-export function initWorkers(): void {
-  logger.info('Starting BullMQ workers...');
-  // Workers are initialised on import — just reference them to ensure they're alive
-  [smsWorker, paymentWorker, timerWorker].forEach((w) => {
-    logger.info({ queue: w.name }, `Worker started`);
-  });
+let workersStarted = false;
+
+/**
+ * BullMQ workers should never block API boot.
+ * When Redis is unavailable we skip them entirely and let the API start.
+ */
+export async function initWorkers(): Promise<void> {
+  if (workersStarted) {
+    return;
+  }
+
+  if (!redisAvailable) {
+    logger.warn('Redis unavailable — background workers disabled for this deployment');
+    workersStarted = true;
+    return;
+  }
+
+  try {
+    const [{ smsWorker }, { paymentWorker }, { timerWorker }] = await Promise.all([
+      import('./sms.worker'),
+      import('./payment.worker'),
+      import('./timer.worker'),
+    ]);
+
+    [smsWorker, paymentWorker, timerWorker].forEach((worker) => {
+      logger.info({ queue: worker.name }, 'Worker started');
+    });
+
+    workersStarted = true;
+  } catch (error) {
+    logger.error({ error }, 'Failed to initialize background workers');
+  }
 }
-
-export { smsWorker, paymentWorker, timerWorker };

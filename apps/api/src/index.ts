@@ -13,6 +13,7 @@ import { authRoutes } from './routes/admin/auth.routes';
 import { initWorkers } from './workers';
 import { initializeAdminUsers } from './services/auth/admin-auth.service';
 import { logger } from './utils/logger';
+import { redisAvailable } from './redis/client';
 
 // ─── Sentry Init ──────────────────────────────────────────────────────────────
 initSentry();
@@ -38,8 +39,9 @@ async function bootstrap() {
     global: true,
     max: 30,
     timeWindow: '1 minute',
-    redis: redisClient,
+    ...(redisAvailable ? { redis: redisClient } : {}),
     keyGenerator: (request) => request.ip,
+    allowList: (request) => ['/health', '/health/full', '/'].includes(request.url),
     errorResponseBuilder: () => ({
       statusCode: 429,
       error: 'Too Many Requests',
@@ -115,12 +117,13 @@ async function bootstrap() {
   });
 
   // ── Start Workers ──────────────────────────────────────────────────────────
-  initWorkers();
-
   // ── Listen ─────────────────────────────────────────────────────────────────
   await app.listen({ port: env.PORT, host: '0.0.0.0' });
 
   logger.info(`🚀 TrustEscrow NG API running on port ${env.PORT} [${env.NODE_ENV}]`);
+
+  // Start workers after the HTTP server is confirmed healthy.
+  void initWorkers();
 }
 
 // ─── Graceful Shutdown ────────────────────────────────────────────────────────

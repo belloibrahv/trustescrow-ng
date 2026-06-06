@@ -7,11 +7,17 @@ import { truncateSms, normalisePhone } from '../../utils/sanitize';
 
 // ─── AT SDK Init ─────────────────────────────────────────────────────────────
 // username = 'sandbox' in dev; real username in prod
-const at = AfricasTalking({
-  apiKey: env.AT_API_KEY,
-  username: env.AT_USERNAME,
-});
-const atSms = at.SMS;
+const hasAfricaTalkingCredentials = Boolean(env.AT_API_KEY && env.AT_USERNAME);
+const atSms = hasAfricaTalkingCredentials
+  ? AfricasTalking({
+      apiKey: env.AT_API_KEY,
+      username: env.AT_USERNAME,
+    }).SMS
+  : null;
+
+if (!hasAfricaTalkingCredentials) {
+  logger.warn('Africa\'s Talking credentials missing — SMS will use fallback providers only');
+}
 
 // ─── Twilio Init (fallback) ──────────────────────────────────────────────────
 const twilioClient =
@@ -32,16 +38,18 @@ export async function sendSms(params: SendSmsParams): Promise<void> {
   const to = normalisePhone(params.to);
 
   // Primary: Africa's Talking
-  try {
-    await atSms.send({
-      to: [to],
-      message,
-      from: env.AT_SHORTCODE,
-    });
-    logger.info({ to, dealRef: params.dealRef, chars: message.length }, 'SMS sent via AT');
-    return;
-  } catch (atErr) {
-    logger.warn({ err: (atErr as Error).message, to }, 'AT SMS failed — trying Twilio fallback');
+  if (atSms && env.AT_SHORTCODE) {
+    try {
+      await atSms.send({
+        to: [to],
+        message,
+        from: env.AT_SHORTCODE,
+      });
+      logger.info({ to, dealRef: params.dealRef, chars: message.length }, 'SMS sent via AT');
+      return;
+    } catch (atErr) {
+      logger.warn({ err: (atErr as Error).message, to }, 'AT SMS failed — trying Twilio fallback');
+    }
   }
 
   // Fallback: Twilio
