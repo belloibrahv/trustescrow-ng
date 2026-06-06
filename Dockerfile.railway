@@ -1,13 +1,15 @@
-# Railway Dockerfile for TrustEscrow API (Fixed Dependencies)
+# Railway Dockerfile for TrustEscrow API (Diagnostic Mode)
 FROM node:20-slim
 
-# Install system dependencies
+# Install system dependencies including networking tools
 RUN apt-get update && apt-get install -y \
     curl \
     python3 \
     make \
     g++ \
     jq \
+    net-tools \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -26,11 +28,60 @@ COPY apps/api/build.js ./build.js
 COPY apps/api/src ./src
 COPY apps/api/prisma ./prisma
 
-# Build the application
-RUN npm run build
+# Build both the main app and Railway-specific server
+RUN npm run build && npm run build:railway
 
 # Remove dev dependencies after build
 RUN npm prune --production --no-audit
+
+# Create enhanced startup script
+RUN cat > start.sh << 'EOF'
+#!/bin/bash
+echo "=========================================="
+echo "🚀 TrustEscrow API - Railway Deployment"
+echo "📅 $(date)"
+echo "🆔 Container: $(hostname)"
+echo "=========================================="
+
+# Environment diagnostics
+echo "🔧 Environment Variables:"
+echo "   NODE_ENV: ${NODE_ENV:-not_set}"
+echo "   PORT: ${PORT:-not_set}"
+echo "   APP_URL: ${APP_URL:-not_set}"
+echo "   DATABASE_URL: ${DATABASE_URL:0:30}..."
+
+# Network diagnostics
+echo ""
+echo "🌐 Network Configuration:"
+echo "   Hostname: $(hostname)"
+echo "   Listening interfaces:"
+ip addr show | grep 'inet ' | head -5
+
+# Process diagnostics
+echo ""
+echo "📂 Process Information:"
+echo "   Working directory: $(pwd)"
+echo "   User: $(whoami)"
+echo "   Node version: $(node --version)"
+echo "   Available files:"
+ls -la dist/ | head -10
+
+# Port check
+echo ""
+echo "🔍 Port Status:"
+netstat -tuln 2>/dev/null | grep ":${PORT:-3000}" || echo "   Port ${PORT:-3000} is available"
+
+echo ""
+echo "🚀 Starting Railway server (minimal mode for diagnostics)..."
+echo "   Binding to: 0.0.0.0:${PORT:-3000}"
+echo "   Health endpoint: /health"
+echo ""
+
+# Use Railway-specific server for initial deployment
+exec node dist/railway-server.js
+EOF
+
+RUN chmod +x start.sh
 
 # Create non-root user for security
 RUN useradd -r -s /bin/false -u 1001 trustescrow && \
@@ -41,5 +92,5 @@ USER trustescrow
 # Expose port (Railway will set PORT env var)
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Start with diagnostic script
+CMD ["./start.sh"]
