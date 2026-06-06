@@ -1,73 +1,94 @@
-# Ultra-minimal Railway Dockerfile for debugging
-FROM node:20-alpine
+# Absolute minimal test for Railway
+FROM alpine:3.18
+
+# Install Node.js
+RUN apk add --no-cache nodejs npm curl
 
 WORKDIR /app
 
-# Install curl for debugging
-RUN apk add --no-cache curl netstat-nat
+# Create the most basic possible server inline
+RUN cat > server.js << 'EOF'
+console.log('🚀 STARTING RAILWAY TEST SERVER');
+console.log('📅 Time:', new Date().toISOString());
+console.log('🔧 Node version:', process.version);
+console.log('🌐 Environment:', JSON.stringify({
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: process.env.PORT,
+  PWD: process.cwd()
+}, null, 2));
 
-# Create the simplest possible server
-RUN echo 'const http = require("http");' > simple-server.js && \
-    echo 'const port = process.env.PORT || 3000;' >> simple-server.js && \
-    echo 'const server = http.createServer((req, res) => {' >> simple-server.js && \
-    echo '  console.log(`📨 Request: ${req.method} ${req.url}`);' >> simple-server.js && \
-    echo '  if (req.url === "/health") {' >> simple-server.js && \
-    echo '    res.writeHead(200, {"Content-Type": "application/json"});' >> simple-server.js && \
-    echo '    res.end(JSON.stringify({status:"ok",port:port,time:new Date().toISOString()}));' >> simple-server.js && \
-    echo '  } else {' >> simple-server.js && \
-    echo '    res.writeHead(200, {"Content-Type": "application/json"});' >> simple-server.js && \
-    echo '    res.end(JSON.stringify({name:"TrustEscrow Debug",status:"running"}));' >> simple-server.js && \
-    echo '  }' >> simple-server.js && \
-    echo '});' >> simple-server.js && \
-    echo 'server.listen(port, "0.0.0.0", () => {' >> simple-server.js && \
-    echo '  console.log(`🚀 Debug server running on http://0.0.0.0:${port}`);' >> simple-server.js && \
-    echo '  console.log(`🏥 Health: http://0.0.0.0:${port}/health`);' >> simple-server.js && \
-    echo '});' >> simple-server.js && \
-    echo 'console.log("📅 Server starting at:", new Date().toISOString());' >> simple-server.js && \
-    echo 'console.log("🔧 NODE_ENV:", process.env.NODE_ENV);' >> simple-server.js && \
-    echo 'console.log("🌐 PORT:", port);' >> simple-server.js
+const http = require('http');
+const port = process.env.PORT || 3000;
 
-# Create comprehensive startup script
-RUN echo '#!/bin/sh' > start-debug.sh && \
-    echo 'set -e' >> start-debug.sh && \
-    echo 'echo "===========================================" ' >> start-debug.sh && \
-    echo 'echo "🚀 ULTRA DEBUG MODE - Railway Container"' >> start-debug.sh && \
-    echo 'echo "📅 $(date)"' >> start-debug.sh && \
-    echo 'echo "🆔 Container: $(hostname)"' >> start-debug.sh && \
-    echo 'echo "==========================================="' >> start-debug.sh && \
-    echo 'echo "🔧 Environment Variables:"' >> start-debug.sh && \
-    echo 'echo "   NODE_ENV: ${NODE_ENV:-NOT_SET}"' >> start-debug.sh && \
-    echo 'echo "   PORT: ${PORT:-NOT_SET}"' >> start-debug.sh && \
-    echo 'echo "   PWD: $(pwd)"' >> start-debug.sh && \
-    echo 'echo "   USER: $(whoami)"' >> start-debug.sh && \
-    echo 'echo ""' >> start-debug.sh && \
-    echo 'echo "🖥️  System Info:"' >> start-debug.sh && \
-    echo 'echo "   OS: $(uname -a)"' >> start-debug.sh && \
-    echo 'echo "   Node: $(node --version)"' >> start-debug.sh && \
-    echo 'echo "   Memory: $(free -h | grep Mem || echo Available)"' >> start-debug.sh && \
-    echo 'echo ""' >> start-debug.sh && \
-    echo 'echo "📁 Files:"' >> start-debug.sh && \
-    echo 'ls -la' >> start-debug.sh && \
-    echo 'echo ""' >> start-debug.sh && \
-    echo 'echo "🌐 Network Check:"' >> start-debug.sh && \
-    echo 'echo "   Checking port ${PORT:-3000} availability..."' >> start-debug.sh && \
-    echo 'netstat -tulpn 2>/dev/null | grep ":${PORT:-3000}" || echo "   ✅ Port ${PORT:-3000} available"' >> start-debug.sh && \
-    echo 'echo ""' >> start-debug.sh && \
-    echo 'echo "▶️  Starting simple HTTP server..."' >> start-debug.sh && \
-    echo 'node simple-server.js &' >> start-debug.sh && \
-    echo 'SERVER_PID=$!' >> start-debug.sh && \
-    echo 'echo "🔧 Server PID: $SERVER_PID"' >> start-debug.sh && \
-    echo 'sleep 3' >> start-debug.sh && \
-    echo 'echo ""' >> start-debug.sh && \
-    echo 'echo "🧪 Testing server locally..."' >> start-debug.sh && \
-    echo 'curl -s http://localhost:${PORT:-3000}/health || echo "❌ Local health check failed"' >> start-debug.sh && \
-    echo 'echo ""' >> start-debug.sh && \
-    echo 'echo "🎯 Server should be ready for Railway health checks"' >> start-debug.sh && \
-    echo 'echo "⏳ Keeping container alive..."' >> start-debug.sh && \
-    echo 'wait $SERVER_PID' >> start-debug.sh && \
-    chmod +x start-debug.sh
+const server = http.createServer((req, res) => {
+  console.log(`📨 ${new Date().toISOString()} - ${req.method} ${req.url}`);
+  
+  res.writeHead(200, {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  });
+  
+  const response = {
+    status: 'ok',
+    message: 'Railway test server running',
+    timestamp: new Date().toISOString(),
+    port: port,
+    url: req.url,
+    uptime: process.uptime()
+  };
+  
+  res.end(JSON.stringify(response, null, 2));
+});
+
+server.on('error', (err) => {
+  console.error('❌ Server error:', err);
+  process.exit(1);
+});
+
+server.listen(port, '0.0.0.0', () => {
+  console.log('✅ Server listening on http://0.0.0.0:' + port);
+  console.log('🏥 Health: http://0.0.0.0:' + port + '/health');
+  console.log('🎯 Ready for Railway health checks!');
+});
+
+// Self-test after 2 seconds
+setTimeout(() => {
+  const selfTest = http.get(`http://localhost:${port}/health`, (res) => {
+    console.log('🧪 Self-test successful, status:', res.statusCode);
+  });
+  selfTest.on('error', (err) => {
+    console.log('⚠️ Self-test failed:', err.message);
+  });
+}, 2000);
+EOF
+
+# Create startup script with diagnostics
+RUN cat > start.sh << 'EOF'
+#!/bin/sh
+echo "========================================"
+echo "🚀 Railway Test Container Starting"
+echo "📅 $(date)"
+echo "🆔 Hostname: $(hostname)"
+echo "🌐 Network interfaces:"
+ip addr show || ifconfig || echo "No network info available"
+echo "🔧 Environment variables:"
+env | grep -E "(NODE_ENV|PORT)" || echo "No relevant env vars"
+echo "📂 Working directory: $(pwd)"
+echo "📁 Files in /app:"
+ls -la /app
+echo "🖥️ System info:"
+uname -a
+echo "💾 Memory:"
+free -h || echo "Memory info not available"
+echo "🌐 Port ${PORT:-3000} check:"
+netstat -tulpn 2>/dev/null | grep ":${PORT:-3000}" || echo "Port available"
+echo "========================================"
+echo "▶️ Starting Node.js server..."
+exec node server.js
+EOF
+
+RUN chmod +x start.sh
 
 EXPOSE 3000
 
-# Use the ultra-simple startup
-CMD ["./start-debug.sh"]
+CMD ["./start.sh"]
