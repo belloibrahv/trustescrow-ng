@@ -1,19 +1,30 @@
-# Simple Railway Dockerfile for TrustEscrow API
+# Railway Dockerfile for TrustEscrow API
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy all necessary files for workspace build
+# Copy all package files first for better caching
 COPY package*.json ./
-COPY apps/api/ ./apps/api/
-COPY packages/ ./packages/
+COPY apps/api/package*.json ./apps/api/
+COPY packages/types/package*.json ./packages/types/
 
-# Install all dependencies (including workspaces)
+# Install dependencies
 RUN npm ci --ignore-scripts
 
-# Generate Prisma client and build
+# Copy source code
+COPY apps/api/src ./apps/api/src
+COPY apps/api/prisma ./apps/api/prisma
+COPY apps/api/build.js ./apps/api/
+COPY apps/api/tsconfig.json ./apps/api/
+COPY packages/types ./packages/types
+
+# Change to API directory and build
 WORKDIR /app/apps/api
+
+# Generate Prisma client
 RUN npx prisma generate
+
+# Build the application
 RUN npm run build
 
 # Install only production dependencies
@@ -26,9 +37,5 @@ USER appuser
 
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
-
-# Start application (migrations + server)
+# Start with migrations then server
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
