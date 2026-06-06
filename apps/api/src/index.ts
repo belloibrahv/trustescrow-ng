@@ -53,8 +53,32 @@ async function bootstrap() {
   await app.register(authRoutes, { prefix: '/api/admin/auth' });
   await app.register(adminRoutes, { prefix: '/api/admin' });
 
+  // ── Basic Routes ──────────────────────────────────────────────────────────
+  // Simple root endpoint
+  app.get('/', async () => {
+    return {
+      name: 'TrustEscrow API',
+      version: '1.0.0',
+      status: 'running',
+      timestamp: new Date().toISOString()
+    };
+  });
+
   // ── Health Check ───────────────────────────────────────────────────────────
+  // Simple health check that responds immediately
   app.get('/health', async () => {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      env: env.NODE_ENV,
+      port: env.PORT,
+      uptime: process.uptime(),
+      message: 'API is running'
+    };
+  });
+
+  // Advanced health check with DB/Redis testing
+  app.get('/health/full', async () => {
     try {
       // Test database connection
       await prisma.$queryRaw`SELECT 1`;
@@ -65,15 +89,17 @@ async function bootstrap() {
         timestamp: new Date().toISOString(),
         env: env.NODE_ENV,
         port: env.PORT,
+        uptime: process.uptime(),
         db: dbStatus,
         redis: redisClient.status === 'ready' ? 'connected' : 'disconnected',
       };
     } catch (error) {
       return {
-        status: 'error',
+        status: 'degraded',
         timestamp: new Date().toISOString(),
         env: env.NODE_ENV,
         port: env.PORT,
+        uptime: process.uptime(),
         db: 'disconnected',
         redis: redisClient.status === 'ready' ? 'connected' : 'disconnected',
         error: error instanceof Error ? error.message : 'Unknown error'
