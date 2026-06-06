@@ -1,0 +1,32 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.15" />
+    </filter>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="32" cy="32" r="30" fill="url(#emeraldGradient)" filter="url(#shadow)" />
+  
+  <!-- Shield Shape -->
+  <path d="M32 12L20 18V28C20 36 24 42 32 46C40 42 44 36 44 28V18L32 12Z" fill="white" opacity="0.95" />
+  
+  <!-- Lock Symbol -->
+  <circle cx="32" cy="28" r="3.5" fill="url(#emeraldGradient)" />
+  <path d="M32 31.5V36.5" stroke="url(#emeraldGradient)" stroke-width="2.5" stroke-linecap="round" />
+  
+  <!-- Transaction Arrows -->
+  <g opacity="0.9">
+    <path d="M14 32H22" stroke="white" stroke-width="2" stroke-linecap="round" />
+    <path d="M20 30L22 32L20 34" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M42 32H50" stroke="white" stroke-width="2" stroke-linecap="round" />
+    <path d="M48 30L50 32L48 34" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+  
+  <!-- Checkmark -->
+  <path d="M28 28L30.5 31L36 25" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.3" />
+</svg>
