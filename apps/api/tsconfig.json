@@ -23,10 +23,7 @@
     "noPropertyAccessFromIndexSignature": false,
     "noUncheckedIndexedAccess": false,
     "exactOptionalPropertyTypes": false,
-    "isolatedModules": true,
-    "paths": {
-      "@trustescrow/types": ["../../packages/types/src/index.ts"]
-    }
+    "isolatedModules": true
   },
   "ts-node": {
     "transpileOnly": true,

@@ -1,4 +1,4 @@
-# Railway Dockerfile for TrustEscrow API (Monorepo)
+# Railway Dockerfile for TrustEscrow API (Fixed Dependencies)
 FROM node:20-slim
 
 # Install system dependencies
@@ -7,20 +7,20 @@ RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
+    jq \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy package.json for API
-COPY apps/api/package.json ./package.json
+# Copy and modify package.json to remove unused workspace dependency
+COPY apps/api/package.json ./package.json.orig
+RUN jq 'del(.dependencies."@trustescrow/types")' package.json.orig > package.json && \
+    rm package.json.orig
 
-# Install dependencies
+# Install dependencies (without the problematic workspace dep)
 RUN npm install --legacy-peer-deps --no-audit
 
-# Copy shared packages (required for TypeScript compilation)
-COPY packages ./packages
-
-# Copy API source files
+# Copy application files
 COPY apps/api/tsconfig.json ./tsconfig.json
 COPY apps/api/build.js ./build.js
 COPY apps/api/src ./src
