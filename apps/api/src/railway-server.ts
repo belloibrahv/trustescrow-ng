@@ -1,81 +1,99 @@
 // apps/api/src/railway-server.ts
-// Minimal Railway-compatible server for deployment troubleshooting
-import Fastify from 'fastify';
-import { env } from './config/env';
+// Ultra-minimal Railway server for debugging deployment issues
+const http = require('http');
 
-console.log('🚀 Railway Server Starting...');
-console.log('📅', new Date().toISOString());
-console.log('🌐 Port:', env.PORT);
-console.log('📍 Environment:', env.NODE_ENV);
+// Environment setup
+const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0';
 
-const app = Fastify({
-  logger: false, // Disable fastify logging for cleaner Railway logs
-  trustProxy: true,
-  bodyLimit: 1_048_576,
+console.log('🚀 RAILWAY MINIMAL SERVER STARTING');
+console.log('📅 Started at:', new Date().toISOString());
+console.log('🌐 Binding to:', `${HOST}:${PORT}`);
+console.log('📍 Node version:', process.version);
+console.log('📍 Platform:', process.platform);
+
+// Create basic HTTP server
+const server = http.createServer((req, res) => {
+  const timestamp = new Date().toISOString();
+  console.log(`📨 ${timestamp} ${req.method} ${req.url}`);
+  
+  // Set CORS headers
+  res.writeHead(200, {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type'
+  });
+  
+  const response = {
+    status: 'ok',
+    message: 'Railway deployment successful',
+    timestamp: timestamp,
+    port: PORT,
+    host: HOST,
+    url: req.url,
+    method: req.method,
+    uptime: process.uptime(),
+    env: process.env.NODE_ENV || 'development',
+    deployment: 'railway-minimal'
+  };
+  
+  res.end(JSON.stringify(response, null, 2));
 });
 
-async function startServer() {
-  try {
-    // Basic health check route (no database dependencies)
-    app.get('/health', async () => {
-      return {
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        env: env.NODE_ENV,
-        port: env.PORT,
-        uptime: process.uptime(),
-        message: 'Railway deployment successful',
-      };
-    });
-
-    // Root route
-    app.get('/', async () => {
-      return {
-        name: 'TrustEscrow API',
-        version: '1.0.0',
-        status: 'running',
-        timestamp: new Date().toISOString(),
-        deployment: 'railway',
-      };
-    });
-
-    // Add basic error handler
-    app.setErrorHandler((error, request, reply) => {
-      console.error('Request error:', error.message);
-      reply.code(500).send({ error: 'Internal server error' });
-    });
-
-    // Start server
-    await app.listen({ 
-      port: env.PORT, 
-      host: '0.0.0.0' // CRITICAL for Railway
-    });
-
-    console.log(`✅ Server listening on 0.0.0.0:${env.PORT}`);
-    console.log(`🏥 Health check: http://0.0.0.0:${env.PORT}/health`);
-    console.log('🎯 Ready for Railway health checks!');
-
-  } catch (error) {
-    console.error('❌ Server startup failed:', error);
-    process.exit(1);
+// Handle server errors
+server.on('error', (err) => {
+  console.error('❌ SERVER ERROR:', err.message);
+  console.error('❌ Error code:', err.code);
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use!`);
+  } else if (err.code === 'EACCES') {
+    console.error(`❌ Permission denied to bind to port ${PORT}!`);
   }
-}
-
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('📡 SIGTERM received, shutting down...');
-  await app.close();
-  process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-  console.log('📡 SIGINT received, shutting down...');
-  await app.close();
-  process.exit(0);
-});
-
-// Start the server
-startServer().catch((err) => {
-  console.error('❌ Failed to start Railway server:', err);
   process.exit(1);
 });
+
+// Start server
+server.listen(PORT, HOST, () => {
+  console.log(`✅ Server successfully listening on ${HOST}:${PORT}`);
+  console.log(`🏥 Health endpoint ready: http://${HOST}:${PORT}/health`);
+  console.log(`🌐 Root endpoint ready: http://${HOST}:${PORT}/`);
+  console.log('🎯 Ready for Railway health checks!');
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('📡 SIGTERM received, shutting down...');
+  server.close(() => {
+    console.log('✅ Server closed gracefully');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('📡 SIGINT received, shutting down...');
+  server.close(() => {
+    console.log('✅ Server closed gracefully');
+    process.exit(0);
+  });
+});
+
+// Log process information
+console.log('🔧 Process info:');
+console.log('   PID:', process.pid);
+console.log('   User:', process.getuid ? process.getuid() : 'unknown');
+console.log('   Memory:', Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB');
+
+// Self-test after 2 seconds
+setTimeout(() => {
+  console.log('🧪 Running self-test...');
+  const testReq = http.get(`http://localhost:${PORT}/health`, (res) => {
+    console.log(`✅ Self-test passed: HTTP ${res.statusCode}`);
+    res.on('data', (data) => {
+      console.log('📊 Response preview:', data.toString().substring(0, 100) + '...');
+    });
+  });
+  testReq.on('error', (err) => {
+    console.error('❌ Self-test failed:', err.message);
+  });
+}, 2000);
