@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "node build.js",
+    "build:minimal": "tsc src/minimal-server.ts --outDir dist --target ES2022 --module commonjs --esModuleInterop --skipLibCheck",
     "build:strict": "tsc --project tsconfig.json",
     "start": "node dist/index.js",
+    "start:minimal": "node dist/minimal-server.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

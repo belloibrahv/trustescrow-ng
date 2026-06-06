@@ -1,4 +1,4 @@
-# Simplified Railway Dockerfile for debugging
+# Minimal Railway Dockerfile for debugging
 FROM node:20-alpine
 
 WORKDIR /app
@@ -7,43 +7,42 @@ WORKDIR /app
 COPY package*.json ./
 COPY apps/api/package*.json ./apps/api/
 
-# Copy types package if it exists
-COPY packages/ ./packages/
+# Install minimal dependencies
+RUN cd apps/api && npm install fastify@^4.27.0 --save
 
-# Install dependencies (including dev deps for build)
-RUN npm ci --ignore-scripts
-
-# Copy all source files
-COPY apps/api/ ./apps/api/
+# Copy minimal server source
+COPY apps/api/src/minimal-server.ts ./apps/api/src/
+COPY apps/api/railway-start.sh ./apps/api/
 
 # Work in API directory
 WORKDIR /app/apps/api
 
-# Generate Prisma client first
-RUN npx prisma generate
+# Build minimal server
+RUN npx tsc src/minimal-server.ts --outDir dist --target ES2022 --module commonjs --esModuleInterop --skipLibCheck
 
-# Build the application
-RUN npm run build
+# Verify build
+RUN ls -la dist/ && echo "✅ Minimal build created"
+RUN node --check dist/minimal-server.js && echo "✅ Minimal JS is valid"
 
-# Verify build output
-RUN ls -la dist/ && echo "✅ Build files created"
-
-# Test that the built file loads
-RUN node --check dist/index.js && echo "✅ Built JavaScript is valid"
-
-# Install production dependencies
-RUN npm ci --only=production --ignore-scripts
+# Create startup script that uses minimal server
+RUN echo '#!/bin/sh' > start-minimal.sh && \
+    echo 'set -e' >> start-minimal.sh && \
+    echo 'echo "🚀 Starting minimal TrustEscrow API..."' >> start-minimal.sh && \
+    echo 'echo "📅 $(date)"' >> start-minimal.sh && \
+    echo 'echo "🔧 NODE_ENV: ${NODE_ENV:-development}"' >> start-minimal.sh && \
+    echo 'echo "🌐 PORT: ${PORT:-3000}"' >> start-minimal.sh && \
+    echo 'echo "🆔 Container: $(hostname)"' >> start-minimal.sh && \
+    echo 'echo ""' >> start-minimal.sh && \
+    echo 'echo "▶️ Starting minimal server..."' >> start-minimal.sh && \
+    echo 'exec node dist/minimal-server.js' >> start-minimal.sh && \
+    chmod +x start-minimal.sh
 
 # Create non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 RUN chown -R appuser:appgroup /app
-
-# Make startup script executable
-RUN chmod +x railway-start.sh
-
 USER appuser
 
 EXPOSE 3000
 
-# Use the debug startup script
-CMD ["./railway-start.sh"]
+# Use minimal startup
+CMD ["./start-minimal.sh"]

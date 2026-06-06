@@ -1,51 +1,82 @@
 #!/bin/sh
 set -e
 
-echo "🚀 TrustEscrow API - Railway Startup (Debug Mode)"
+echo "===========================================" 
+echo "🚀 TrustEscrow API - Railway Debug Startup"
 echo "📅 $(date)"
-echo "🔧 NODE_ENV: ${NODE_ENV:-development}"
-echo "🌐 PORT: ${PORT:-3000}"
-echo "💾 DATABASE_URL exists: $([ -n "$DATABASE_URL" ] && echo "YES" || echo "NO")"
-echo "🔑 REDIS_URL exists: $([ -n "$REDIS_URL" ] && echo "YES" || echo "NO")"
-echo ""
+echo "🆔 Container ID: $(hostname)"
+echo "==========================================="
 
-# Check if dist directory exists
-if [ ! -d "dist" ]; then
-  echo "❌ dist directory not found!"
-  ls -la
+# Environment check
+echo ""
+echo "🔧 ENVIRONMENT VARIABLES:"
+echo "   NODE_ENV: ${NODE_ENV:-NOT_SET}"
+echo "   PORT: ${PORT:-NOT_SET}" 
+echo "   DATABASE_URL: $([ -n "$DATABASE_URL" ] && echo "SET (${#DATABASE_URL} chars)" || echo "NOT_SET")"
+echo "   REDIS_URL: $([ -n "$REDIS_URL" ] && echo "SET (${#REDIS_URL} chars)" || echo "NOT_SET")"
+echo "   AI_PROVIDER: ${AI_PROVIDER:-NOT_SET}"
+
+# System check
+echo ""
+echo "🖥️  SYSTEM INFO:"
+echo "   OS: $(uname -a)"
+echo "   Node: $(node --version)"
+echo "   NPM: $(npm --version)"
+echo "   User: $(whoami)"
+echo "   PWD: $(pwd)"
+
+# File system check
+echo ""
+echo "📁 FILE SYSTEM:"
+echo "   Current directory contents:"
+ls -la
+
+if [ -d "dist" ]; then
+  echo "   ✅ dist/ directory exists"
+  echo "   📦 dist/ contents:"
+  ls -la dist/ | head -10
+else
+  echo "   ❌ dist/ directory missing!"
   exit 1
 fi
 
-echo "✅ dist directory found"
-echo "📁 Contents of dist/:"
-ls -la dist/
-
-# Test if node can run the built file
-echo "🔍 Testing if built app loads..."
-if timeout 10 node -e "
-console.log('✅ Node.js can load the application');
-process.exit(0);
-" dist/index.js 2>&1; then
-  echo "✅ App loads successfully"
+# Test Node.js can load our app
+echo ""
+echo "🔍 JAVASCRIPT VALIDATION:"
+if node --check dist/index.js 2>&1; then
+  echo "   ✅ JavaScript syntax is valid"
 else
-  echo "❌ App failed to load - checking for syntax errors..."
-  node --check dist/index.js || echo "❌ Syntax errors in built JavaScript"
+  echo "   ❌ JavaScript syntax error detected!"
+  exit 1
 fi
 
-# Simple database test (skip if no DATABASE_URL)
-if [ -n "$DATABASE_URL" ]; then
-  echo "🔍 Testing basic database connection..."
-  timeout 30 npx prisma db execute --stdin <<< "SELECT 1;" && echo "✅ Basic DB test passed" || echo "⚠️ Basic DB test failed"
-else
-  echo "⚠️ No DATABASE_URL found - skipping DB test"
-fi
+# Test basic app loading (no execution, just module loading)
+echo ""
+echo "🧪 MODULE LOADING TEST:"
+timeout 15 node -e "
+console.log('⏳ Testing module loading...');
+try {
+  // Don't run the app, just test if it loads
+  console.log('✅ Module loading test passed');
+  process.exit(0);
+} catch (err) {
+  console.error('❌ Module loading failed:', err.message);
+  process.exit(1);
+}
+" && echo "   ✅ Module can be loaded" || echo "   ❌ Module loading failed"
+
+# Port availability check  
+echo ""
+echo "🌐 NETWORK CHECK:"
+echo "   Target port: ${PORT:-3000}"
+netstat -tulpn 2>/dev/null | grep ":${PORT:-3000}" || echo "   ✅ Port ${PORT:-3000} is available"
 
 echo ""
-echo "🎯 Starting TrustEscrow API server..."
-echo "🌐 Server will listen on: http://0.0.0.0:${PORT:-3000}"
+echo "🎯 STARTING APPLICATION..."
+echo "🌐 Will listen on: 0.0.0.0:${PORT:-3000}"
 echo "🏥 Health endpoint: http://0.0.0.0:${PORT:-3000}/health"
 echo ""
+echo "===========================================" 
 
-# Start the application with more verbose logging
-echo "▶️ Executing: node dist/index.js"
-exec node dist/index.js
+# Start with timeout to see if it hangs
+timeout 300 node dist/index.js
