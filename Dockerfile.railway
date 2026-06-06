@@ -1,7 +1,7 @@
-# Simplified Railway Dockerfile for TrustEscrow API
+# Railway Dockerfile for TrustEscrow API (Monorepo)
 FROM node:20-slim
 
-# Install required dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     python3 \
@@ -11,14 +11,16 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy package.json and install dependencies
+# Copy package.json for API
 COPY apps/api/package.json ./package.json
-RUN npm install --legacy-peer-deps
 
-# Copy shared types package (required for TypeScript compilation)
+# Install dependencies
+RUN npm install --legacy-peer-deps --no-audit
+
+# Copy shared packages (required for TypeScript compilation)
 COPY packages ./packages
 
-# Copy application files
+# Copy API source files
 COPY apps/api/tsconfig.json ./tsconfig.json
 COPY apps/api/build.js ./build.js
 COPY apps/api/src ./src
@@ -27,12 +29,17 @@ COPY apps/api/prisma ./prisma
 # Build the application
 RUN npm run build
 
-# Create non-root user
+# Remove dev dependencies after build
+RUN npm prune --production --no-audit
+
+# Create non-root user for security
 RUN useradd -r -s /bin/false -u 1001 trustescrow && \
     chown -R trustescrow:trustescrow /app
 
 USER trustescrow
 
+# Expose port (Railway will set PORT env var)
 EXPOSE 3000
 
+# Start the application
 CMD ["npm", "start"]
