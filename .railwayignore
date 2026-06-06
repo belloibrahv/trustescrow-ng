@@ -1,5 +1,8 @@
 # Railway Ignore - files to exclude from Railway deployment
 
+# Admin app (separate deployment to Vercel)
+apps/admin/
+
 # Development files
 .env
 .env.local
@@ -39,9 +42,7 @@ Thumbs.db
 docs/
 *.md
 DEPLOYMENT*.md
-
-# Admin app (separate deployment)
-apps/admin/
+RAILWAY*.md
 
 # Development tools
 docker-compose.yml
@@ -50,3 +51,7 @@ interactive-demo.ts
 
 # Deployment configs for other platforms
 vercel.json
+
+# Other apps not needed for API
+apps/*/
+!apps/api/

@@ -54,13 +54,32 @@ async function bootstrap() {
   await app.register(adminRoutes, { prefix: '/api/admin' });
 
   // ── Health Check ───────────────────────────────────────────────────────────
-  app.get('/health', async () => ({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    env: env.NODE_ENV,
-    db: 'connected',
-    redis: redisClient.status === 'ready' ? 'connected' : 'disconnected',
-  }));
+  app.get('/health', async () => {
+    try {
+      // Test database connection
+      await prisma.$queryRaw`SELECT 1`;
+      const dbStatus = 'connected';
+      
+      return {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        env: env.NODE_ENV,
+        port: env.PORT,
+        db: dbStatus,
+        redis: redisClient.status === 'ready' ? 'connected' : 'disconnected',
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        timestamp: new Date().toISOString(),
+        env: env.NODE_ENV,
+        port: env.PORT,
+        db: 'disconnected',
+        redis: redisClient.status === 'ready' ? 'connected' : 'disconnected',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  });
 
   // ── Global Error Handler ───────────────────────────────────────────────────
   app.setErrorHandler((error, request, reply) => {

@@ -16,10 +16,14 @@ COPY apps/api/src ./apps/api/src
 COPY apps/api/prisma ./apps/api/prisma
 COPY apps/api/build.js ./apps/api/
 COPY apps/api/tsconfig.json ./apps/api/
+COPY apps/api/railway-start.sh ./apps/api/
 COPY packages/types ./packages/types
 
 # Change to API directory and build
 WORKDIR /app/apps/api
+
+# Make startup script executable
+RUN chmod +x railway-start.sh
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -37,5 +41,5 @@ USER appuser
 
 EXPOSE 3000
 
-# Start with migrations then server
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+# Use the Railway startup script
+CMD ["./railway-start.sh"]
