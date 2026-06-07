@@ -47,10 +47,11 @@ API Service → Settings:
 
 - **Root Directory**: (leave empty) ✅
 - **Dockerfile Path**: `apps/api/Dockerfile` ✅
+- **Start Command**: `node dist/index.js` ✅
+- **Build Command**: (must be EMPTY / null) ✅
 - **Pre-Deploy Command**: (must be EMPTY) ✅
-- **Build Command**: (leave default) ✅
 - **Health Check Path**: `/health` ✅
-- **Port**: Railway will auto-detect from Dockerfile EXPOSE
+- **Port**: leave Railway-managed port settings alone so it can inject `PORT`
 
 ---
 
