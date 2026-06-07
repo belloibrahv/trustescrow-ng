@@ -4,7 +4,7 @@ const http = require('http');
 
 // Environment setup
 const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0';
+const HOST = '::';
 
 console.log('🚀 RAILWAY MINIMAL SERVER STARTING');
 console.log('📅 Started at:', new Date().toISOString());

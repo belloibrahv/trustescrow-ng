@@ -31,7 +31,7 @@ app.get('/', async () => {
 async function start() {
   try {
     const port = parseInt(process.env.PORT || '3000', 10);
-    const host = '0.0.0.0';
+    const host = '::';
     
     console.log('🚀 Starting minimal TrustEscrow API server...');
     console.log(`🌐 Listening on: ${host}:${port}`);

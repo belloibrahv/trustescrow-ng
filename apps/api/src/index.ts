@@ -118,7 +118,9 @@ async function bootstrap() {
 
   // ── Start Workers ──────────────────────────────────────────────────────────
   // ── Listen ─────────────────────────────────────────────────────────────────
-  await app.listen({ port: env.PORT, host: '0.0.0.0' });
+  // Railway's Fastify deployment expects the app to listen on `::`
+  // so it is reachable over both the public and private network.
+  await app.listen({ port: env.PORT, host: '::' });
 
   logger.info(`🚀 TrustEscrow NG API running on port ${env.PORT} [${env.NODE_ENV}]`);
 

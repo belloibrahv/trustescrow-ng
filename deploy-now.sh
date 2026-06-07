@@ -158,7 +158,6 @@ echo ""
 
 # Set environment variables one by one
 railway variables set NODE_ENV=production
-railway variables set PORT=3000
 railway variables set LOG_LEVEL=info
 
 # Security
