@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { api } from '@/lib/api';
 
 interface AdminUser {
   id: string;
@@ -26,17 +27,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = useCallback(async (token: string) => {
     try {
-      const response = await fetch('http://localhost:3000/api/admin/auth/me', {
+      const response = await api.get('/api/admin/auth/me', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
+      if (!response.data?.id) {
         throw new Error('Invalid token');
       }
 
-      const userData = await response.json();
+      const userData = response.data;
       setUser(userData);
     } catch (error) {
       // Token is invalid, remove it

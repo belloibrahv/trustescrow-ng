@@ -5,6 +5,6 @@
   "framework": "nextjs",
   "rootDirectory": "apps/admin",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://trustescrow-production.up.railway.app"
+    "NEXT_PUBLIC_API_URL": "https://trustescrow-ng.onrender.com"
   }
 }

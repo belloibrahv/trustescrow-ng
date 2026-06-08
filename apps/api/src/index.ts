@@ -29,9 +29,21 @@ async function bootstrap() {
   // ── Initialize Admin Users ─────────────────────────────────────────────────
   initializeAdminUsers();
 
+  const allowedOrigins = Array.from(
+    new Set(
+      [
+        env.APP_URL,
+        env.ADMIN_CORS_ORIGIN,
+        env.NODE_ENV === 'production'
+          ? 'https://trustescrow-ng-admin.vercel.app'
+          : 'http://localhost:3001',
+      ].filter((origin): origin is string => Boolean(origin))
+    )
+  );
+
   // ── Plugins ────────────────────────────────────────────────────────────────
   await app.register(cors, {
-    origin: Array.from(new Set([env.APP_URL, env.ADMIN_CORS_ORIGIN || 'http://localhost:3001'])),
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
   });
 

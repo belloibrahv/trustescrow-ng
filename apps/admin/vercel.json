@@ -4,6 +4,6 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://trustescrow-production.up.railway.app"
+    "NEXT_PUBLIC_API_URL": "https://trustescrow-ng.onrender.com"
   }
 }

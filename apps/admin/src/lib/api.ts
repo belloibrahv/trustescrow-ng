@@ -1,6 +1,16 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
+const isDevelopment = process.env.NODE_ENV === 'development';
+const hasStaleProductionUrl =
+  !!configuredApiUrl && /localhost|trustescrow-production\.up\.railway\.app/i.test(configuredApiUrl);
+
+const API_BASE_URL =
+  configuredApiUrl && (isDevelopment || !hasStaleProductionUrl)
+    ? configuredApiUrl
+    : isDevelopment
+      ? 'http://localhost:3000'
+      : 'https://trustescrow-ng.onrender.com';
 
 // Create axios instance
 export const api = axios.create({
@@ -26,7 +36,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
+      const requestUrl = error.config?.url || '';
+      const isLoginRequest = requestUrl.includes('/api/admin/auth/login');
+
+      if (!isLoginRequest && typeof window !== 'undefined') {
         localStorage.removeItem('admin_token');
         window.location.href = '/login';
       }

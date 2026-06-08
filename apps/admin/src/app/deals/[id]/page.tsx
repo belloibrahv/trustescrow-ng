@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { use } from 'react';
-import axios from 'axios';
 import { format } from 'date-fns';
 import { ArrowLeft, MessageSquare, FileText, AlertCircle, CheckCircle, XCircle, User, Phone, Shield, Calendar, DollarSign } from 'lucide-react';
 import Link from 'next/link';
+import { adminApi } from '@/lib/api';
 
 interface DealDetail {
   id: string;
@@ -68,7 +68,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
   const fetchDeal = async () => {
     try {
-      const { data } = await axios.get(`http://localhost:3000/api/admin/deals/${resolvedParams.id}`);
+      const { data } = await adminApi.getDeal(resolvedParams.id);
       setDeal(data);
     } catch (error) {
       console.error('Failed to fetch deal:', error);

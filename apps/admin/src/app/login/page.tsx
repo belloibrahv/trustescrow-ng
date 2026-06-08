@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, User, AlertCircle, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
+import { api } from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,19 +19,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3000/api/admin/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'Login failed');
-        setLoading(false);
-        return;
-      }
+      const { data } = await api.post('/api/admin/auth/login', { username, password });
 
       // Store token in localStorage
       localStorage.setItem('admin_token', data.token);
@@ -39,7 +28,8 @@ export default function LoginPage() {
       router.push('/');
       router.refresh();
     } catch (err) {
-      setError('Connection error. Make sure the API is running.');
+      const errorMessage = (err as any)?.response?.data?.error || 'Connection error. Make sure the API is running.';
+      setError(errorMessage);
       setLoading(false);
     }
   };

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useCallback, memo } from 'react';
-import axios from 'axios';
 import { Search, CheckCircle, XCircle } from 'lucide-react';
+import { adminApi } from '@/lib/api';
 
 interface User {
   id: string;
@@ -34,7 +34,7 @@ export default function UsersPage() {
     setUser(null);
 
     try {
-      const { data } = await axios.get(`http://localhost:3000/api/admin/users/${phone.trim()}`);
+      const { data } = await adminApi.getUser(phone.trim());
       setUser(data);
     } catch (err: any) {
       setError(err.response?.data?.error || 'User not found');
