@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "node build.js",
+    "db:generate": "prisma generate",
+    "build": "npm run db:generate && node build.js",
     "build:minimal": "tsc src/minimal-server.ts --outDir dist --target ES2022 --module commonjs --esModuleInterop --skipLibCheck",
     "build:railway": "tsc src/railway-server.ts --outDir dist --target ES2022 --module commonjs --esModuleInterop --skipLibCheck",
     "build:strict": "tsc --project tsconfig.json",
