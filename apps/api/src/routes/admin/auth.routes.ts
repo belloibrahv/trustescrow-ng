@@ -121,6 +121,31 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     }
   });
 
+  // GET /api/admin/auth/debug - Check admin setup (temporary debug endpoint)
+  app.get('/debug', async () => {
+    const adminUsersEnv = process.env.ADMIN_USERS;
+    const hasAdminUsers = !!adminUsersEnv;
+    let parsedUsers: string[] = [];
+    
+    if (hasAdminUsers) {
+      try {
+        const users = JSON.parse(adminUsersEnv);
+        parsedUsers = Object.keys(users);
+      } catch (error) {
+        // Parsing failed
+      }
+    }
+
+    return {
+      hasAdminUsersEnv: hasAdminUsers,
+      adminUsernames: parsedUsers,
+      nodeEnv: process.env.NODE_ENV,
+      message: hasAdminUsers 
+        ? 'Admin users configured correctly' 
+        : 'ADMIN_USERS environment variable not found - add it to Render deployment',
+    };
+  });
+
   // POST /api/admin/auth/logout - Logout (client-side token removal)
   app.post('/logout', async () => {
     // JWT is stateless, so logout is handled client-side by removing token

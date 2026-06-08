@@ -1,32 +1,39 @@
-<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="140" height="40" viewBox="0 0 140 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield background with gradient -->
   <defs>
-    <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="checkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.15" />
-    </filter>
   </defs>
   
-  <!-- Background Circle -->
-  <circle cx="32" cy="32" r="30" fill="url(#emeraldGradient)" filter="url(#shadow)" />
-  
-  <!-- Shield Shape -->
-  <path d="M32 12L20 18V28C20 36 24 42 32 46C40 42 44 36 44 28V18L32 12Z" fill="white" opacity="0.95" />
-  
-  <!-- Lock Symbol -->
-  <circle cx="32" cy="28" r="3.5" fill="url(#emeraldGradient)" />
-  <path d="M32 31.5V36.5" stroke="url(#emeraldGradient)" stroke-width="2.5" stroke-linecap="round" />
-  
-  <!-- Transaction Arrows -->
-  <g opacity="0.9">
-    <path d="M14 32H22" stroke="white" stroke-width="2" stroke-linecap="round" />
-    <path d="M20 30L22 32L20 34" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-    <path d="M42 32H50" stroke="white" stroke-width="2" stroke-linecap="round" />
-    <path d="M48 30L50 32L48 34" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-  </g>
+  <!-- Shield shape -->
+  <path d="M8 12C8 8 11 6 16 6C21 6 24 8 24 12V20C24 26 20 30 16 34C12 30 8 26 8 20V12Z" 
+        fill="url(#shieldGradient)" 
+        stroke="#1e40af" 
+        stroke-width="0.5"/>
   
   <!-- Checkmark -->
-  <path d="M28 28L30.5 31L36 25" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.3" />
+  <path d="M12 18L15 21L20 16" 
+        stroke="url(#checkGradient)" 
+        stroke-width="2.5" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        fill="none"/>
+  
+  <!-- Company name -->
+  <text x="34" y="16" font-family="system-ui, -apple-system, sans-serif" 
+        font-size="14" font-weight="700" fill="#1e293b">
+    TrustEscrow
+  </text>
+  
+  <!-- Tagline -->
+  <text x="34" y="28" font-family="system-ui, -apple-system, sans-serif" 
+        font-size="10" font-weight="500" fill="#64748b" letter-spacing="0.5px">
+    SECURE TRANSACTIONS
+  </text>
 </svg>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, FileText, AlertCircle, Users, LogOut, User, Menu, X } from 'lucide-react';
+import { Home, FileText, AlertCircle, Users, LogOut, User, Menu, X, ShieldCheck } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '@/lib/auth';
 import { useState, useCallback, memo } from 'react';
@@ -31,13 +31,13 @@ const NavItem = memo(({
       href={item.href}
       onClick={onClick}
       className={clsx(
-        'flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
+        'group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200',
         isActive
-          ? 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 shadow-sm border border-emerald-200'
-          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+          ? 'border border-white/10 bg-white/10 text-white shadow-[0_16px_40px_rgba(15,23,42,0.22)] ring-1 ring-white/5'
+          : 'text-slate-300 hover:bg-white/5 hover:text-white'
       )}
     >
-      <Icon className="w-5 h-5" />
+      <Icon className={clsx('h-5 w-5 transition-transform duration-200 group-hover:scale-105', isActive ? 'text-emerald-300' : 'text-slate-400')} />
       <span>{item.label}</span>
     </Link>
   );
@@ -56,18 +56,20 @@ export function Navigation() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-slate-950/95 px-4 py-3 text-white backdrop-blur-xl">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <Logo size="sm" />
-            <div>
-              <span className="text-lg font-bold text-gray-900">TrustEscrow</span>
-              <span className="text-lg font-bold text-emerald-600 ml-1">NG</span>
+            <div className="rounded-xl bg-white/10 p-1.5 ring-1 ring-white/10">
+              <Logo size="sm" theme="dark" />
+            </div>
+            <div className="leading-tight">
+              <span className="block text-base font-semibold tracking-tight text-white">TrustEscrow NG</span>
+              <span className="text-xs font-medium uppercase tracking-[0.24em] text-emerald-300/80">Admin portal</span>
             </div>
           </Link>
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-xl text-gray-600 hover:bg-gray-100"
+            className="rounded-xl p-2 text-slate-200 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-950"
           >
             {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -85,60 +87,54 @@ export function Navigation() {
       {/* Sidebar */}
       <aside
         className={clsx(
-          'fixed top-0 left-0 bottom-0 w-64 bg-white border-r border-gray-200 z-50 transition-transform duration-300 flex flex-col',
+          'fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-white/10 bg-slate-950/95 text-white shadow-[0_24px_90px_rgba(2,6,23,0.45)] backdrop-blur-xl transition-transform duration-300',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.16),_transparent_26%),radial-gradient(circle_at_bottom_right,_rgba(255,255,255,0.06),_transparent_36%)]" />
+
         {/* Logo Section */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="relative border-b border-white/10 p-6">
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="transition-transform group-hover:scale-105">
-              <Logo size="md" />
+            <div className="rounded-2xl bg-white/10 p-2 ring-1 ring-white/10 transition-transform group-hover:scale-105">
+              <Logo size="md" theme="dark" />
             </div>
-            <div>
-              <div>
-                <span className="text-xl font-bold text-gray-900">TrustEscrow</span>
-                <span className="text-xl font-bold text-emerald-600 ml-1">NG</span>
+            <div className="leading-tight">
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-semibold tracking-tight text-white">TrustEscrow</span>
+                <span className="text-xl font-semibold tracking-tight text-emerald-300">NG</span>
               </div>
-              <p className="text-xs text-gray-500 font-medium">Admin Portal</p>
+              <p className="mt-1 text-xs font-medium uppercase tracking-[0.22em] text-slate-400">Admin command center</p>
             </div>
           </Link>
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="relative flex-1 space-y-2 overflow-y-auto px-4 py-5">
           {navItems.map((item) => {
-            const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
-              <Link
+              <NavItem
                 key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={clsx(
-                  'flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
-                  isActive
-                    ? 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 shadow-sm border border-emerald-200'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                )}
-              >
-                <Icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </Link>
+                item={item}
+                isActive={isActive}
+                onClick={closeSidebar}
+              />
             );
           })}
         </nav>
 
         {/* User Info Section */}
-        <div className="p-4 border-t border-gray-200 space-y-3">
+        <div className="relative space-y-4 border-t border-white/10 p-4">
           {/* User Card */}
-          <div className="flex items-center space-x-3 px-3 py-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg shadow-md">
-              <User className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-3 shadow-[0_16px_40px_rgba(2,6,23,0.2)]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/20">
+              <User className="h-5 w-5 text-white" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{user?.username}</p>
-              <p className="text-xs text-emerald-600 font-medium">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-white">{user?.username}</p>
+              <p className="inline-flex items-center gap-1 text-xs font-medium text-emerald-300">
+                <ShieldCheck className="h-3.5 w-3.5" />
                 {user?.role === 'super_admin' ? 'Super Admin' : 'Admin'}
               </p>
             </div>
@@ -147,9 +143,9 @@ export function Navigation() {
           {/* Logout Button */}
           <button
             onClick={logout}
-            className="flex items-center justify-center space-x-2 w-full px-4 py-3 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all border border-red-200 hover:border-red-300"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-100 transition-all hover:border-rose-400/30 hover:bg-rose-500/15 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 focus:ring-offset-slate-950"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="h-4 w-4" />
             <span>Logout</span>
           </button>
         </div>

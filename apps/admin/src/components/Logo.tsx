@@ -1,232 +1,173 @@
-import React from 'react';
+import { useId } from 'react';
+
+type LogoSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+type LogoTheme = 'light' | 'dark';
+type LogoVariant = 'full' | 'icon' | 'wordmark';
 
 interface LogoProps {
+  size?: LogoSize;
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  variant?: LogoVariant;
+  theme?: LogoTheme;
 }
 
-export function Logo({ className = '', size = 'md' }: LogoProps) {
-  const sizes = {
-    sm: 32,
-    md: 48,
-    lg: 64,
-  };
+const SIZE_CONFIG: Record<
+  LogoSize,
+  {
+    icon: number;
+    gap: number;
+    brandSize: number;
+    pillSize: number;
+    lineSize: number;
+    letterSpacing: string;
+  }
+> = {
+  xs: { icon: 20, gap: 6, brandSize: 12, pillSize: 7, lineSize: 8, letterSpacing: '-0.02em' },
+  sm: { icon: 24, gap: 8, brandSize: 14, pillSize: 8, lineSize: 9, letterSpacing: '-0.025em' },
+  md: { icon: 32, gap: 10, brandSize: 18, pillSize: 9, lineSize: 10, letterSpacing: '-0.03em' },
+  lg: { icon: 40, gap: 12, brandSize: 22, pillSize: 10, lineSize: 11, letterSpacing: '-0.035em' },
+  xl: { icon: 48, gap: 14, brandSize: 28, pillSize: 11, lineSize: 12, letterSpacing: '-0.04em' },
+};
 
-  const dimension = sizes[size];
-  // Generate a simple unique ID based on size
-  const uniqueId = `${size}-${Math.random().toString(36).substr(2, 9)}`;
+function BrandIcon({ size, className = '' }: { size: number; className?: string }) {
+  const id = useId().replace(/:/g, '');
 
   return (
     <svg
-      width={dimension}
-      height={dimension}
+      width={size}
+      height={size}
       viewBox="0 0 64 64"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
+      aria-hidden="true"
     >
-      {/* Gradient Definitions */}
       <defs>
-        <linearGradient id={`emeraldGradient-${uniqueId}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 1 }} />
-          <stop offset="100%" style={{ stopColor: '#059669', stopOpacity: 1 }} />
+        <linearGradient id={`bg-${id}`} x1="10%" y1="12%" x2="92%" y2="88%">
+          <stop offset="0%" stopColor="#020617" />
+          <stop offset="100%" stopColor="#0f172a" />
         </linearGradient>
-        <linearGradient id={`lightGradient-${uniqueId}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: '#34d399', stopOpacity: 1 }} />
-          <stop offset="100%" style={{ stopColor: '#10b981', stopOpacity: 1 }} />
+        <linearGradient id={`glow-${id}`} x1="22%" y1="18%" x2="86%" y2="84%">
+          <stop offset="0%" stopColor="#34d399" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.08" />
         </linearGradient>
-        <filter id={`shadow-${uniqueId}`}>
-          <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.15" />
+        <linearGradient id={`shield-${id}`} x1="20%" y1="14%" x2="78%" y2="88%">
+          <stop offset="0%" stopColor="#6ee7b7" />
+          <stop offset="52%" stopColor="#10b981" />
+          <stop offset="100%" stopColor="#059669" />
+        </linearGradient>
+        <linearGradient id={`emerald-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#86efac" />
+          <stop offset="100%" stopColor="#22c55e" />
+        </linearGradient>
+        <linearGradient id={`sky-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#7dd3fc" />
+          <stop offset="100%" stopColor="#38bdf8" />
+        </linearGradient>
+        <filter id={`shadow-${id}`} x="-25%" y="-25%" width="150%" height="150%">
+          <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#020617" floodOpacity="0.38" />
         </filter>
       </defs>
 
-      {/* Background Circle with Gradient */}
-      <circle
-        cx="32"
-        cy="32"
-        r="30"
-        fill={`url(#emeraldGradient-${uniqueId})`}
-        filter={`url(#shadow-${uniqueId})`}
+      <rect x="4" y="4" width="56" height="56" rx="18" fill={`url(#bg-${id})`} />
+      <rect x="4" y="4" width="56" height="56" rx="18" fill={`url(#glow-${id})`} opacity="0.65" />
+
+      <circle cx="19" cy="18" r="8" fill="white" opacity="0.05" />
+      <circle cx="47" cy="15" r="6" fill="#22c55e" opacity="0.08" />
+
+      {/* Buyer -> escrow -> seller flow */}
+      <circle cx="14" cy="33" r="4.2" fill={`url(#emerald-${id})`} />
+      <circle cx="50" cy="33" r="4.2" fill={`url(#sky-${id})`} />
+
+      <path
+        d="M18.8 33H26.2"
+        stroke={`url(#emerald-${id})`}
+        strokeWidth="3.3"
+        strokeLinecap="round"
+      />
+      <path
+        d="M24.8 30.9L29 33L24.8 35.1"
+        fill={`url(#emerald-${id})`}
       />
 
-      {/* Shield Shape - Main Security Symbol */}
       <path
-        d="M32 12L20 18V28C20 36 24 42 32 46C40 42 44 36 44 28V18L32 12Z"
-        fill="white"
-        opacity="0.95"
+        d="M37.8 33H45.2"
+        stroke={`url(#sky-${id})`}
+        strokeWidth="3.3"
+        strokeLinecap="round"
+      />
+      <path
+        d="M40 30.9L44.2 33L40 35.1"
+        fill={`url(#sky-${id})`}
       />
 
-      {/* Lock/Keyhole Symbol in Shield Center */}
-      <circle cx="32" cy="28" r="3.5" fill={`url(#emeraldGradient-${uniqueId})`} />
+      {/* Secure escrow core */}
       <path
-        d="M32 31.5V36.5"
-        stroke={`url(#emeraldGradient-${uniqueId})`}
-        strokeWidth="2.5"
+        d="M32 14L42.8 19.8V31.8C42.8 38.8 38.4 44.2 32 49.2C25.6 44.2 21.2 38.8 21.2 31.8V19.8L32 14Z"
+        fill={`url(#shield-${id})`}
+        stroke="rgba(255,255,255,0.18)"
+        strokeWidth="0.8"
+        filter={`url(#shadow-${id})`}
+      />
+
+      <rect x="27.8" y="27.8" width="8.4" height="9.2" rx="2.3" fill="#f8fafc" opacity="0.98" />
+      <circle cx="32" cy="31.6" r="1.55" fill="#0f172a" />
+      <path
+        d="M32 33.2V35.8"
+        stroke="#0f172a"
+        strokeWidth="1.7"
         strokeLinecap="round"
       />
 
-      {/* Transaction Arrows - Left to Right Flow */}
-      <g opacity="0.9">
-        {/* Left Arrow */}
-        <path
-          d="M14 32H22"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M20 30L22 32L20 34"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        {/* Right Arrow */}
-        <path
-          d="M42 32H50"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M48 30L50 32L48 34"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
-
-      {/* Checkmark for Trust/Verification */}
       <path
-        d="M28 28L30.5 31L36 25"
-        stroke="white"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity="0.3"
-      />
-    </svg>
-  );
-}
-
-// Alternative Logo Design - More Modern
-export function LogoAlt({ className = '', size = 'md' }: LogoProps) {
-  const sizes = {
-    sm: 32,
-    md: 48,
-    lg: 64,
-  };
-
-  const dimension = sizes[size];
-
-  return (
-    <svg
-      width={dimension}
-      height={dimension}
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
-      <defs>
-        <linearGradient id="gradAlt" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 1 }} />
-          <stop offset="100%" style={{ stopColor: '#059669', stopOpacity: 1 }} />
-        </linearGradient>
-      </defs>
-
-      {/* Rounded Square Background */}
-      <rect
-        x="4"
-        y="4"
-        width="56"
-        height="56"
-        rx="14"
-        fill="url(#gradAlt)"
-      />
-
-      {/* Stylized "TE" Monogram */}
-      <g fill="white" opacity="0.95">
-        {/* Letter T */}
-        <path d="M18 20H28V24H24V44H22V24H18V20Z" />
-        
-        {/* Letter E with escrow box design */}
-        <path d="M36 20H46V24H40V30H45V34H40V40H46V44H36V20Z" />
-      </g>
-
-      {/* Secure Lock Icon Overlay */}
-      <circle cx="50" cy="14" r="8" fill="#059669" />
-      <path
-        d="M50 11V13M48 16H52V19H48V16Z"
-        stroke="white"
-        strokeWidth="1.5"
+        d="M28.3 24.8C29.4 23.6 30.7 23 32 23C33.3 23 34.6 23.6 35.7 24.8"
+        stroke="rgba(255,255,255,0.4)"
+        strokeWidth="1.2"
         strokeLinecap="round"
       />
     </svg>
   );
 }
 
-// Minimalist Logo - Clean and Professional
-export function LogoMinimal({ className = '', size = 'md' }: LogoProps) {
-  const sizes = {
-    sm: 32,
-    md: 48,
-    lg: 64,
-  };
+export function Logo({
+  size = 'md',
+  className = '',
+  variant = 'icon',
+  theme = 'light',
+}: LogoProps) {
+  const config = SIZE_CONFIG[size];
+  
+  if (variant === 'full') {
+    return (
+      <div className={`flex items-center ${className}`} style={{ gap: config.gap }}>
+        <BrandIcon size={config.icon} />
+        <span
+          className="font-bold text-slate-900 tracking-tight"
+          style={{ fontSize: config.brandSize, letterSpacing: config.letterSpacing }}
+        >
+          TrustEscrow
+        </span>
+      </div>
+    );
+  }
 
-  const dimension = sizes[size];
+  if (variant === 'wordmark') {
+    return (
+      <span
+        className={`font-bold text-slate-900 tracking-tight ${className}`}
+        style={{ fontSize: config.brandSize, letterSpacing: config.letterSpacing }}
+      >
+        TrustEscrow
+      </span>
+    );
+  }
 
-  return (
-    <svg
-      width={dimension}
-      height={dimension}
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
-      <defs>
-        <linearGradient id="gradMin" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 1 }} />
-          <stop offset="50%" style={{ stopColor: '#059669', stopOpacity: 1 }} />
-          <stop offset="100%" style={{ stopColor: '#047857', stopOpacity: 1 }} />
-        </linearGradient>
-      </defs>
+  return <BrandIcon size={config.icon} className={className} />;
+}
 
-      {/* Hexagon Shape - Represents Security and Structure */}
-      <path
-        d="M32 6L52 18V46L32 58L12 46V18L32 6Z"
-        fill="url(#gradMin)"
-      />
-
-      {/* Inner Safe/Vault Design */}
-      <g transform="translate(32, 32)">
-        {/* Vault Door Circle */}
-        <circle cx="0" cy="0" r="14" fill="white" opacity="0.2" />
-        <circle cx="0" cy="0" r="11" fill="white" opacity="0.95" />
-        
-        {/* Lock Mechanism */}
-        <circle cx="0" cy="0" r="4" fill="url(#gradMin)" />
-        <line x1="0" y1="0" x2="0" y2="7" stroke="url(#gradMin)" strokeWidth="2" />
-        <line x1="0" y1="0" x2="-5" y2="4" stroke="url(#gradMin)" strokeWidth="1.5" />
-        <line x1="0" y1="0" x2="5" y2="4" stroke="url(#gradMin)" strokeWidth="1.5" />
-        
-        {/* Checkmark */}
-        <path
-          d="M-4 -2L-1 1L4 -4"
-          stroke="white"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity="0.5"
-        />
-      </g>
-
-      {/* Corner Accents - Representing Transaction Flow */}
-      <circle cx="16" cy="32" r="2" fill="white" opacity="0.6" />
-      <circle cx="48" cy="32" r="2" fill="white" opacity="0.6" />
-    </svg>
-  );
+export function LogoMark({
+  size = 'md',
+  className = '',
+}: Pick<LogoProps, 'size' | 'className'>) {
+  return <BrandIcon size={SIZE_CONFIG[size].icon} className={className} />;
 }
