@@ -1,8 +1,12 @@
 // Quick test script for Gemini AI integration
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAb8RN6JVoSs3hpbGM0bWqBdd4aURXgMuaIzRCOMHTEHeThTGGg';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = 'gemini-2.0-flash-exp';
+
+if (!GEMINI_API_KEY) {
+  throw new Error('Set GEMINI_API_KEY before running this test.');
+}
 
 async function testGemini() {
   console.log('🧪 Testing Gemini AI Integration...\n');

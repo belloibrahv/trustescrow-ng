@@ -9,7 +9,8 @@ dotenv.config({ path: `.env.${process.env.NODE_ENV ?? 'development'}` });
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(3000),
-  APP_URL: z.string().min(1).default('http://localhost:3000'), // More flexible for deployment
+  APP_URL: z.string().min(1).default(process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000'), // More flexible for deployment
+  ADMIN_CORS_ORIGIN: z.string().optional(),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 
   // Security - required but flexible for Railway
@@ -19,7 +20,7 @@ const envSchema = z.object({
 
   // Database - Railway provides DATABASE_URL automatically
   DATABASE_URL: z.string().min(1), // More flexible validation
-  REDIS_URL: z.string().min(1),    // More flexible validation
+  REDIS_URL: z.string().optional().default(''),    // Optional: falls back to in-memory cache if absent
 
   // Africa's Talking - optional to prevent startup failures
   AT_USERNAME: z.string().optional(),
@@ -112,7 +113,8 @@ if (!parsed.success) {
     const fallbackEnv = {
       NODE_ENV: 'production',
       PORT: parseInt(process.env.PORT || '3000'),
-      APP_URL: process.env.APP_URL || 'http://localhost:3000',
+      APP_URL: process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000',
+      ADMIN_CORS_ORIGIN: process.env.ADMIN_CORS_ORIGIN || 'http://localhost:3001',
       LOG_LEVEL: 'info',
       ADMIN_JWT_SECRET: process.env.ADMIN_JWT_SECRET || 'railway-fallback-secret-min10chars',
       ENCRYPTION_KEY: process.env.ENCRYPTION_KEY || '350498d24b8d2ac5de614a99f970574b2d5a984bdec0ff60a4fb50fe19f07231',

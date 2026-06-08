@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: trustescrow-api
+    runtime: docker
+    dockerContext: .
+    dockerfilePath: apps/api/Dockerfile
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    preDeployCommand: npm run db:deploy
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+        # Paste your existing Railway PUBLIC PostgreSQL connection string here.
+      - key: ADMIN_JWT_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: NIN_SALT
+        generateValue: true
+      - key: AI_PROVIDER
+        value: fallback
+      - key: LOG_LEVEL
+        value: info
+      - key: USE_MOCK_NIN
+        value: "false"
+      - key: USE_MOCK_PAYSTACK
+        value: "false"
+      - key: LIVENESS_THRESHOLD_KOBO
+        value: "50000000"
+      - key: DVA_EXPIRY_DAYS
+        value: "7"
+      - key: DISPUTE_AUTO_ESCALATE_HOURS
+        value: "48"
+      - key: MAX_NIN_ATTEMPTS
+        value: "3"
+      - key: DEAL_VALUE_CAP_KOBO
+        value: "0"

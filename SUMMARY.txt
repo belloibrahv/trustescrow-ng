@@ -17,7 +17,7 @@ Repository: https://github.com/belloibrahv/trustescrow-ng
    ✅ Documentation structured
 
 2. ENVIRONMENT CONFIGURED
-   ✅ Railway template: env.railway.template
+   ✅ Environment template sanitized: env.railway.template
    ✅ Redis URL configured
    ✅ Development credentials ready
    ✅ Dockerfile optimized for Railway
@@ -39,14 +39,14 @@ OPTION 1: Railway Dashboard (RECOMMENDED) ⭐
   2. New Project → Deploy from GitHub
   3. Select: belloibrahv/trustescrow-ng
   4. Add PostgreSQL database
-  5. Set variables from env.railway.template
+  5. Set variables from the sanitized environment template
   6. Deploy automatically!
 
 OPTION 2: Automated Script
   Time: 30-45 minutes | Effort: Low | Auto-deploy: No
   
   cd /Users/kudiratbello/trustescrow-ng
-  bash deploy-now.sh
+  Deploy via Render Blueprint or your preferred deployment flow
 
 OPTION 3: Manual Step-by-Step
   Time: 60-90 minutes | Effort: High
@@ -86,8 +86,8 @@ trustescrow-ng/
 ├── README.md                      # Main documentation
 ├── DEPLOYMENT.md                  # Quick deployment guide ⭐
 ├── DEPLOYMENT_STATUS.md           # Current status
-├── env.railway.template           # Railway environment vars
-├── deploy-now.sh                  # Automated deployment
+├── env.railway.template           # Sanitized environment template
+├── render.yaml                    # Render Blueprint for API deployment
 ├── railway.json                   # Railway config
 ├── docker-compose.yml             # Local development
 │
@@ -156,7 +156,7 @@ DASHBOARDS (After deployment)
 
 COMMANDS
   # Deploy API
-  bash deploy-now.sh
+  Deploy via Render Blueprint or your preferred deployment flow
   
   # Deploy Admin
   cd apps/admin && vercel --prod
@@ -226,7 +226,7 @@ Everything is prepared. Start with:
      https://railway.app → Deploy from GitHub
 
   🤖 ALTERNATIVE: Automated Script
-     bash deploy-now.sh
+     Deploy via Render Blueprint or your preferred deployment flow
 
   📖 MANUAL: Step-by-Step Guide
      docs/deployment/DEPLOY_WITH_DEV_CREDENTIALS.md

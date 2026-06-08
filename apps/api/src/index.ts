@@ -31,7 +31,7 @@ async function bootstrap() {
 
   // ── Plugins ────────────────────────────────────────────────────────────────
   await app.register(cors, {
-    origin: [env.APP_URL, 'http://localhost:3001'],
+    origin: Array.from(new Set([env.APP_URL, env.ADMIN_CORS_ORIGIN || 'http://localhost:3001'])),
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
   });
 
